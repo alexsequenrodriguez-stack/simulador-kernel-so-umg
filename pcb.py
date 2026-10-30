@@ -1,3 +1,6 @@
+# Proyecto Final - Sistemas Operativos I
+# Universidad Mariano Galvez de Guatemala
+# Autor: Gerardo Sequen
 """
 pcb.py
 Modulo del Bloque de Control de Procesos (PCB).

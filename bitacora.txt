@@ -1,0 +1,9 @@
+[2026-10-29 21:44:34] === GS-Kernel iniciado ===
+[2026-10-29 21:45:33] CREADO P1 'Word' | 40 MB | rafaga 7
+[2026-10-29 21:45:46] CREADO P2 'Chrome' | 30 MB | rafaga 4
+[2026-10-29 21:46:04] CREADO P3 'Spotify' | 20 MB | rafaga 3
+[2026-10-29 21:47:35] RECHAZADO 'Photoshop' por Out of Memory (pide 35 MB, libres 10 MB)
+[2026-10-29 21:48:32] ROUND ROBIN ejecutado con 3 procesos | Espera RR 7.33 vs FCFS 6.00 | Respuesta RR 3.00 vs FCFS 6.00
+[2026-10-29 21:50:34] SEMAFORO: 3 procesos, saldo 100, deposito 50 | sin semaforo = 150, con semaforo = 250
+[2026-10-29 21:52:57] DEADLOCK detectado entre PA y PB
+[2026-10-29 21:53:55] RECUPERACION: se aborto PA, deadlock resuelto

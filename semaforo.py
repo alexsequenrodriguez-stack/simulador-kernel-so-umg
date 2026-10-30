@@ -1,3 +1,6 @@
+# Proyecto Final - Sistemas Operativos I
+# Universidad Mariano Galvez de Guatemala
+# Autor: Gerardo Sequen
 """
 semaforo.py
 Modulo de Concurrencia y Sincronizacion.
@@ -7,21 +10,19 @@ Incluye una demostracion de condicion de carrera: primero sin semaforo (resultad
 y despues con semaforo (resultado correcto).
 """
 
-from collections import deque
-
 
 class SemaforoBinario:
-    """Semaforo binario: permite que solo un proceso a la vez este en la seccion critica."""
+    """Semaforo binario: solo deja que un proceso a la vez este en la seccion critica."""
 
     def __init__(self):
-        self.valor = 1               # 1 = seccion critica libre, 0 = ocupada
-        self.cola_espera = deque()   # Procesos bloqueados esperando su turno para entrar
-        self.dueno = None            # Proceso que esta dentro de la seccion critica en este momento
+        self.valor = 1           # 1 = seccion critica libre, 0 = ocupada
+        self.cola_espera = []    # Procesos bloqueados esperando su turno para entrar
+        self.dueno = None        # Proceso que esta dentro de la seccion critica
 
     def wait(self, proceso):
         """
-        Operacion de bloqueo. El proceso solicita entrar a la seccion critica.
-        Si esta libre, entra; si esta ocupada, se envia a la cola de espera.
+        Pedir la llave. Si la seccion critica esta libre, el proceso entra;
+        si esta ocupada, se va a la cola de espera (queda bloqueado).
         """
         if self.valor == 1:
             self.valor = 0
@@ -35,12 +36,12 @@ class SemaforoBinario:
 
     def signal(self, proceso):
         """
-        Operacion de liberacion. El proceso sale de la seccion critica.
-        Si hay procesos esperando, el primero de la cola entra directamente.
-        Devuelve el proceso que entra, o None si la seccion critica queda libre.
+        Devolver la llave. Si hay alguien en la cola de espera, el primero entra directo;
+        si no hay nadie, la seccion critica queda libre.
+        Devuelve el proceso que entra, o None si queda libre.
         """
-        if self.cola_espera:
-            siguiente = self.cola_espera.popleft()
+        if len(self.cola_espera) > 0:
+            siguiente = self.cola_espera.pop(0)
             self.dueno = siguiente
             print(f"   signal({proceso}): {proceso} SALE y despierta a {siguiente}, que ENTRA")
             return siguiente
@@ -52,17 +53,19 @@ class SemaforoBinario:
 
 def demo_sin_semaforo(procesos, saldo_inicial, deposito):
     """
-    Simula una condicion de carrera: todos los procesos leen la variable global
-    antes de que alguno guarde su resultado, por lo que se pierden actualizaciones.
+    Condicion de carrera: todos los procesos leen la variable global antes de que
+    alguno guarde su resultado, por eso se pierden depositos.
     """
     print(f"\n--- SIN SEMAFORO: {len(procesos)} procesos depositan {deposito} al mismo tiempo ---")
     variable_global = saldo_inicial
     lecturas = {}
 
+    # Todos leen el mismo valor porque nadie controla el acceso
     for p in procesos:
         lecturas[p] = variable_global
         print(f"   {p} lee la variable global = {variable_global}")
 
+    # Cada uno guarda su calculo encima del anterior
     for p in procesos:
         variable_global = lecturas[p] + deposito
         print(f"   {p} guarda {lecturas[p]} + {deposito} = {variable_global}")
@@ -74,19 +77,16 @@ def demo_sin_semaforo(procesos, saldo_inicial, deposito):
 
 
 def demo_con_semaforo(procesos, saldo_inicial, deposito):
-    """
-    Repite el mismo escenario protegiendo la variable global con un semaforo binario:
-    solo un proceso a la vez lee y modifica el dato.
-    """
+    """Mismo escenario, pero la variable global se protege con el semaforo binario."""
     print(f"\n--- CON SEMAFORO BINARIO: {len(procesos)} procesos depositan {deposito} ---")
     semaforo = SemaforoBinario()
     variable_global = saldo_inicial
 
-    # Todos los procesos intentan entrar al mismo tiempo: solo uno lo logra, el resto espera
+    # Todos intentan entrar al mismo tiempo: solo uno lo logra y el resto espera
     for p in procesos:
         semaforo.wait(p)
 
-    # Cada proceso usa la seccion critica en orden y al salir le cede el turno al siguiente
+    # Uno por uno usa la seccion critica y al salir le pasa el turno al siguiente
     actual = semaforo.dueno
     while actual is not None:
         lectura = variable_global

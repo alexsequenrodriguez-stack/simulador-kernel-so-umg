@@ -1,3 +1,6 @@
+# Proyecto Final - Sistemas Operativos I
+# Universidad Mariano Galvez de Guatemala
+# Autor: Gerardo Sequen
 """
 memoria.py
 Modulo de Gestion de Memoria.
