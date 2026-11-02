@@ -7,10 +7,14 @@ Modulo de Planificacion de Procesos con el algoritmo Round Robin (RR).
 Cada proceso de la cola de listos recibe turnos de CPU de maximo q = 3 unidades (quantum).
 Si al agotar el quantum el proceso no ha terminado, se hace un cambio de contexto
 y el proceso regresa al final de la cola de listos.
-Al terminar, se comparan los resultados con FCFS usando los mismos procesos.
+Incluye:
+ - Modo paso a paso (cada turno avanza con Enter)
+ - Rendimiento: procesos terminados por unidad de tiempo
+ - Comparacion con FCFS y comparacion de distintos quantums
 """
 
 from pcb import LISTO, EJECUTANDO, TERMINADO
+from colores import color, color_proceso, VERDE, AMARILLO, CIAN, NEGRITA, GRIS
 
 QUANTUM = 3  # Tiempo maximo de CPU que recibe un proceso en cada turno
 
@@ -41,27 +45,29 @@ class PlanificadorRR:
             return "[] (vacia)"
         texto = "["
         for i in range(len(self.cola_listos)):
-            texto += "P" + str(self.cola_listos[i].pid)
+            pid = self.cola_listos[i].pid
+            texto += color("P" + str(pid), color_proceso(pid))
             if i < len(self.cola_listos) - 1:
                 texto += ", "
         return texto + "]"
 
-    def ejecutar(self):
+    def ejecutar(self, paso_a_paso=False):
         """
         Ejecuta todos los procesos de la cola con Round Robin hasta que terminen.
+        Si paso_a_paso es True, el programa se detiene despues de cada turno hasta presionar Enter.
         Devuelve un resumen con los promedios para guardarlo en la bitacora.
         """
         if len(self.cola_listos) == 0:
             print("No hay procesos en la cola de listos.")
             return None
 
-        # Se guarda una copia de los procesos en el orden en que llegaron (para la tabla y para FCFS)
+        # Copia de los procesos en el orden en que llegaron (para la tabla y para FCFS)
         procesos = list(self.cola_listos)
         reloj_inicial = self.reloj
         turnos = []              # Cada turno se guarda como (pid, inicio, fin) para el diagrama de Gantt
         cambios_contexto = 0
 
-        print(f"\n=== PLANIFICACION ROUND ROBIN (quantum = {self.quantum}) ===")
+        print(color(f"\n=== PLANIFICACION ROUND ROBIN (quantum = {self.quantum}) ===", NEGRITA))
         print(f"Cola inicial: {self.mostrar_cola()}\n")
 
         while len(self.cola_listos) > 0:
@@ -80,7 +86,8 @@ class PlanificadorRR:
             proceso.rafaga_restante = proceso.rafaga_restante - tiempo_turno
             turnos.append((proceso.pid, inicio, self.reloj))
 
-            print(f"[t={inicio:>3} -> {self.reloj:>3}] P{proceso.pid} ({proceso.nombre}) ejecuta "
+            nombre = color(f"P{proceso.pid} ({proceso.nombre})", color_proceso(proceso.pid))
+            print(f"[t={inicio:>3} -> {self.reloj:>3}] CPU: {nombre} ejecuta "
                   f"{tiempo_turno} u. | Restante: {proceso.rafaga_restante}")
 
             # 3. Si ya no le falta nada, termina; si le falta, regresa al final de la fila
@@ -88,18 +95,30 @@ class PlanificadorRR:
                 proceso.estado = TERMINADO
                 proceso.tiempo_finalizacion = self.reloj
                 self.memoria.liberar(proceso.pid)
-                print(f"   -> P{proceso.pid} TERMINO. Libera {proceso.tamano_mb} MB de memoria.")
+                print(color(f"   -> P{proceso.pid} TERMINO. Libera {proceso.tamano_mb} MB de memoria.", VERDE))
             else:
                 proceso.estado = LISTO
                 self.cola_listos.append(proceso)
                 cambios_contexto = cambios_contexto + 1
-                print(f"   -> Quantum agotado. Cambio de contexto: P{proceso.pid} regresa al final de la cola.")
+                print(color(f"   -> Quantum agotado. Cambio de contexto: P{proceso.pid} "
+                            f"regresa al final de la cola.", AMARILLO))
 
             print(f"   Cola de listos: {self.mostrar_cola()}")
 
+            # Modo paso a paso: se espera a que el usuario presione Enter para el siguiente turno
+            if paso_a_paso and len(self.cola_listos) > 0:
+                input(color("   [Enter] siguiente turno...", GRIS))
+
         self.mostrar_gantt(turnos)
         espera_rr, respuesta_rr = self.mostrar_metricas(procesos)
+
+        # Rendimiento = procesos terminados / tiempo total que tardaron
+        tiempo_total = self.reloj - reloj_inicial
+        rendimiento = len(procesos) / tiempo_total
         print(f"Cambios de contexto realizados: {cambios_contexto}")
+        print(f"Rendimiento: {len(procesos)} procesos / {tiempo_total} u. de tiempo = "
+              f"{rendimiento:.2f} procesos por unidad de tiempo")
+
         espera_fcfs, respuesta_fcfs = comparar_con_fcfs(procesos, reloj_inicial)
 
         return {
@@ -108,11 +127,12 @@ class PlanificadorRR:
             "respuesta_rr": respuesta_rr,
             "espera_fcfs": espera_fcfs,
             "respuesta_fcfs": respuesta_fcfs,
+            "rendimiento": rendimiento,
         }
 
     def mostrar_gantt(self, turnos):
-        """Dibuja el diagrama de Gantt: en que orden usaron el CPU los procesos."""
-        print("\nDiagrama de Gantt:")
+        """Dibuja el diagrama de Gantt: en que orden usaron el CPU los procesos (cada uno con su color)."""
+        print(color("\nDiagrama de Gantt:", NEGRITA))
         barras = "|"
         tiempos = ""
         for turno in turnos:
@@ -120,7 +140,8 @@ class PlanificadorRR:
             inicio = turno[1]
             etiqueta = "P" + str(pid)
             # Cada casilla mide 7 caracteres: "|" + 6 de contenido
-            barras += "  " + etiqueta + " " * (4 - len(etiqueta)) + "|"
+            casilla = "  " + etiqueta + " " * (4 - len(etiqueta))
+            barras += color(casilla, color_proceso(pid)) + "|"
             tiempos += str(inicio) + " " * (7 - len(str(inicio)))
         tiempos += str(turnos[-1][2])   # El ultimo tiempo es cuando termina todo
         print(barras)
@@ -175,21 +196,84 @@ def comparar_con_fcfs(procesos, reloj_inicial):
     espera_rr = total_espera_rr / n
     respuesta_rr = total_respuesta_rr / n
 
-    print("\n=== COMPARACION: ROUND ROBIN vs FCFS (mismos procesos) ===")
+    print(color("\n=== COMPARACION: ROUND ROBIN vs FCFS (mismos procesos) ===", NEGRITA))
     print(f"{'':<22}{'Round Robin':>12}{'FCFS':>8}")
     print(f"{'Espera promedio':<22}{espera_rr:>12.2f}{espera_fcfs:>8.2f}")
     print(f"{'Respuesta promedio':<22}{respuesta_rr:>12.2f}{respuesta_fcfs:>8.2f}")
 
     if respuesta_rr < respuesta_fcfs:
-        print("-> Round Robin atiende a todos mas rapido la primera vez (mejor respuesta).")
+        print(color("-> Round Robin atiende a todos mas rapido la primera vez (mejor respuesta).", VERDE))
     elif respuesta_rr == respuesta_fcfs:
         print("-> La respuesta fue igual en los dos algoritmos.")
     else:
-        print("-> En este caso FCFS respondio mas rapido.")
+        print(color("-> En este caso FCFS respondio mas rapido.", AMARILLO))
 
     if espera_rr > espera_fcfs:
-        print("-> A cambio, RR tuvo mas espera total por los cambios de contexto.")
+        print(color("-> A cambio, RR tuvo mas espera total por los cambios de contexto.", AMARILLO))
     return espera_fcfs, respuesta_fcfs
+
+
+def simular_rr(rafagas, quantum):
+    """
+    Simula Round Robin solo con numeros, sin tocar los procesos reales.
+    rafagas es una lista con la rafaga de cada proceso, en orden de llegada (todos llegan en t=0).
+    Devuelve: espera promedio, respuesta promedio, cambios de contexto y rendimiento.
+    """
+    n = len(rafagas)
+    restante = list(rafagas)            # Lo que le falta a cada proceso
+    primera_vez = [None] * n            # Cuando uso el CPU por primera vez
+    fin = [0] * n                       # Cuando termino
+    cola = list(range(n))               # La cola guarda la posicion de cada proceso
+    reloj = 0
+    cambios = 0
+
+    while len(cola) > 0:
+        i = cola.pop(0)
+        if primera_vez[i] is None:
+            primera_vez[i] = reloj
+        turno = min(quantum, restante[i])
+        reloj = reloj + turno
+        restante[i] = restante[i] - turno
+        if restante[i] == 0:
+            fin[i] = reloj
+        else:
+            cola.append(i)
+            cambios = cambios + 1
+
+    total_espera = 0
+    total_respuesta = 0
+    for i in range(n):
+        total_espera += fin[i] - rafagas[i]      # Espera = Retorno - Rafaga (llegada = 0)
+        total_respuesta += primera_vez[i]
+    return total_espera / n, total_respuesta / n, cambios, n / reloj
+
+
+def comparar_quantums(procesos, quantums=(2, 3, 5)):
+    """
+    Corre los mismos procesos con distintos quantums para ver cual conviene.
+    No ejecuta los procesos reales: solo calcula los resultados.
+    """
+    rafagas = []
+    for p in procesos:
+        rafagas.append(p.rafaga_restante)
+
+    print(color("\n=== COMPARACION DE QUANTUMS (mismos procesos) ===", NEGRITA))
+    print(f"Rafagas: {rafagas}")
+    print(f"{'Quantum':<10}{'Espera prom.':>14}{'Respuesta prom.':>17}{'Cambios ctx':>13}")
+    resultados = []
+    for q in quantums:
+        espera, respuesta, cambios, rendimiento = simular_rr(rafagas, q)
+        resultados.append((q, espera, respuesta, cambios))
+        fila = f"{'q = ' + str(q):<10}{espera:>14.2f}{respuesta:>17.2f}{cambios:>13}"
+        if q == QUANTUM:
+            fila = color(fila + "  <- usado", CIAN)
+        print(fila)
+
+    print("-> Quantum pequeno: responde mas rapido pero hace mas cambios de contexto.")
+    print("-> Quantum grande: menos cambios, pero se parece a FCFS y responde mas lento.")
+    print(f"-> El rendimiento es igual en todos ({rendimiento:.2f} procesos por unidad de tiempo) porque")
+    print("   el trabajo total es el mismo; el quantum solo cambia el ORDEN en que se atiende.")
+    return resultados
 
 
 # Prueba rapida del modulo: solo se ejecuta cuando este archivo se corre directamente
@@ -203,4 +287,5 @@ if __name__ == "__main__":
         proceso = PCB(datos[0], datos[1], datos[2])
         ram.asignar(proceso.pid, proceso.tamano_mb)
         planificador.agregar_proceso(proceso)
+    comparar_quantums(planificador.cola_listos)
     planificador.ejecutar()

@@ -9,6 +9,8 @@ cada proceso recibe exactamente el espacio que solicita, siempre que haya sufici
 Si no hay espacio, el proceso se rechaza con un error de desbordamiento (Out of Memory).
 """
 
+from colores import color, VERDE, AMARILLO, ROJO
+
 
 class MemoriaRAM:
     """Administrador de memoria: controla cuanto espacio esta ocupado y por cual proceso."""
@@ -41,12 +43,24 @@ class MemoriaRAM:
             del self.asignaciones[pid]
 
     def mostrar_estado(self):
-        """Muestra una barra visual del uso de memoria (cada simbolo representa 5 MB)."""
+        """
+        Muestra una barra del uso de memoria (cada simbolo representa 5 MB).
+        La barra cambia de color: verde = poco uso, amarillo = 70% o mas, rojo = 90% o mas.
+        """
         usada = self.memoria_usada()
+        porcentaje = usada * 100 // self.capacidad_mb
+        if porcentaje >= 90:
+            codigo = ROJO
+        elif porcentaje >= 70:
+            codigo = AMARILLO
+        else:
+            codigo = VERDE
+
         bloques_usados = usada // 5
         bloques_libres = (self.capacidad_mb // 5) - bloques_usados
-        barra = "#" * bloques_usados + "-" * bloques_libres
-        print(f"RAM [{barra}] {usada}/{self.capacidad_mb} MB usados | {self.memoria_libre()} MB libres")
+        barra = color("#" * bloques_usados, codigo) + "-" * bloques_libres
+        print(f"RAM [{barra}] {usada}/{self.capacidad_mb} MB usados ({porcentaje}%) | "
+              f"{self.memoria_libre()} MB libres")
         for pid, tamano in self.asignaciones.items():
             print(f"   PID {pid}: {tamano} MB")
 
@@ -54,16 +68,10 @@ class MemoriaRAM:
 # Prueba rapida del modulo: solo se ejecuta cuando este archivo se corre directamente
 if __name__ == "__main__":
     ram = MemoriaRAM()
-    pruebas = [(1, 40), (2, 30), (3, 35)]
-
-    for pid, tamano in pruebas:
+    for pid, tamano in [(1, 40), (2, 30), (3, 35)]:
         if ram.asignar(pid, tamano):
             print(f"PID {pid}: se asignaron {tamano} MB")
         else:
-            print(f"PID {pid}: ERROR Out of Memory - solicita {tamano} MB "
-                  f"y solo hay {ram.memoria_libre()} MB libres")
-
-    ram.mostrar_estado()
-    print("Se libera el PID 1...")
-    ram.liberar(1)
+            print(color(f"PID {pid}: ERROR Out of Memory - solicita {tamano} MB "
+                        f"y solo hay {ram.memoria_libre()} MB libres", ROJO))
     ram.mostrar_estado()

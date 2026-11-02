@@ -10,6 +10,8 @@ Incluye una demostracion de condicion de carrera: primero sin semaforo (resultad
 y despues con semaforo (resultado correcto).
 """
 
+from colores import color, VERDE, ROJO, AMARILLO, NEGRITA
+
 
 class SemaforoBinario:
     """Semaforo binario: solo deja que un proceso a la vez este en la seccion critica."""
@@ -27,11 +29,11 @@ class SemaforoBinario:
         if self.valor == 1:
             self.valor = 0
             self.dueno = proceso
-            print(f"   wait({proceso}): seccion critica libre -> {proceso} ENTRA (semaforo = 0)")
+            print(color(f"   wait({proceso}): seccion critica libre -> {proceso} ENTRA (semaforo = 0)", VERDE))
             return True
         self.cola_espera.append(proceso)
-        print(f"   wait({proceso}): ocupada por {self.dueno} -> {proceso} BLOQUEADO. "
-              f"Cola de espera: [{', '.join(self.cola_espera)}]")
+        print(color(f"   wait({proceso}): ocupada por {self.dueno} -> {proceso} BLOQUEADO. "
+                    f"Cola de espera: [{', '.join(self.cola_espera)}]", AMARILLO))
         return False
 
     def signal(self, proceso):
@@ -56,7 +58,7 @@ def demo_sin_semaforo(procesos, saldo_inicial, deposito):
     Condicion de carrera: todos los procesos leen la variable global antes de que
     alguno guarde su resultado, por eso se pierden depositos.
     """
-    print(f"\n--- SIN SEMAFORO: {len(procesos)} procesos depositan {deposito} al mismo tiempo ---")
+    print(color(f"\n--- SIN SEMAFORO: {len(procesos)} procesos depositan {deposito} al mismo tiempo ---", NEGRITA))
     variable_global = saldo_inicial
     lecturas = {}
 
@@ -72,13 +74,13 @@ def demo_sin_semaforo(procesos, saldo_inicial, deposito):
 
     esperado = saldo_inicial + deposito * len(procesos)
     print(f"   Resultado final: {variable_global} | Esperado: {esperado}")
-    print("   -> CONDICION DE CARRERA: se perdieron depositos porque nadie controlo el acceso.")
+    print(color("   -> CONDICION DE CARRERA: se perdieron depositos porque nadie controlo el acceso.", ROJO))
     return variable_global
 
 
 def demo_con_semaforo(procesos, saldo_inicial, deposito):
     """Mismo escenario, pero la variable global se protege con el semaforo binario."""
-    print(f"\n--- CON SEMAFORO BINARIO: {len(procesos)} procesos depositan {deposito} ---")
+    print(color(f"\n--- CON SEMAFORO BINARIO: {len(procesos)} procesos depositan {deposito} ---", NEGRITA))
     semaforo = SemaforoBinario()
     variable_global = saldo_inicial
 
@@ -96,7 +98,7 @@ def demo_con_semaforo(procesos, saldo_inicial, deposito):
 
     esperado = saldo_inicial + deposito * len(procesos)
     print(f"   Resultado final: {variable_global} | Esperado: {esperado}")
-    print("   -> CORRECTO: el semaforo garantizo la exclusion mutua.")
+    print(color("   -> CORRECTO: el semaforo garantizo la exclusion mutua.", VERDE))
     return variable_global
 
 

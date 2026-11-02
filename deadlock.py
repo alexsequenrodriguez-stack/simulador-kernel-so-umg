@@ -5,9 +5,14 @@
 deadlock.py
 Modulo de Interbloqueo (Deadlock).
 Hay dos recursos exclusivos (R1 y R2). Se fuerza una espera circular entre dos procesos,
-el sistema la detecta y la resuelve abortando uno de los procesos.
-Estrategia: Deteccion y Recuperacion por terminacion de procesos.
+el sistema la detecta con el grafo de asignacion de recursos (RAG) y la resuelve
+abortando uno de los procesos.
+Notacion del grafo:  R -> P = el recurso esta ASIGNADO al proceso
+                     P -> R = el proceso SOLICITA el recurso
+Estrategia: Deteccion del ciclo y Recuperacion por terminacion de procesos.
 """
+
+from colores import color, ROJO, VERDE, AMARILLO, NEGRITA
 
 
 class GestorRecursos:
@@ -18,7 +23,7 @@ class GestorRecursos:
         self.espera = {}                        # Proceso -> recurso que esta pidiendo
 
     def solicitar(self, proceso, recurso):
-        """Un proceso pide un recurso. Si esta libre se lo dan; si lo tiene otro, se queda esperando."""
+        """Un proceso pide un recurso. Si esta libre se lo dan, si lo tiene otro, se queda esperando."""
         if self.dueno[recurso] is None:
             self.dueno[recurso] = proceso
             print(f"   {proceso} pide {recurso} -> ASIGNADO")
@@ -26,13 +31,13 @@ class GestorRecursos:
             print(f"   {proceso} ya tiene {recurso}")
         else:
             self.espera[proceso] = recurso
-            print(f"   {proceso} pide {recurso} -> lo tiene {self.dueno[recurso]}. {proceso} queda ESPERANDO")
+            print(color(f"   {proceso} pide {recurso} -> lo tiene {self.dueno[recurso]}. "
+                        f"{proceso} queda ESPERANDO", AMARILLO))
 
     def forzar_deadlock(self, proceso_a, proceso_b):
-        """Arma la trampa: A toma R1 y pide R2; B toma R2 y pide R1. Ninguno puede seguir."""
         self.dueno = {"R1": None, "R2": None}
         self.espera = {}
-        print(f"\n--- SIMULACION DE INTERBLOQUEO entre {proceso_a} y {proceso_b} ---")
+        print(color(f"\n--- SIMULACION DE INTERBLOQUEO entre {proceso_a} y {proceso_b} ---", NEGRITA))
         self.solicitar(proceso_a, "R1")
         self.solicitar(proceso_b, "R2")
         self.solicitar(proceso_a, "R2")
@@ -54,25 +59,27 @@ class GestorRecursos:
         return None
 
     def verificar(self):
-        """Corre la deteccion y muestra el resultado con las 4 condiciones de Coffman."""
+        """Corre la deteccion y muestra el ciclo del grafo con las 4 condiciones de Coffman."""
         atrapados = self.detectar()
         if atrapados is None:
-            print("\n   Sin deadlock: no existe espera circular.")
+            print(color("\n   Sin deadlock: no existe ciclo de espera en el grafo.", VERDE))
             return None
 
         a = atrapados[0]
         b = atrapados[1]
-        print(f"\n   !!! DEADLOCK DETECTADO: {a} -> {b} -> {a}")
-        print("   Condiciones de Coffman presentes:")
+        # Ciclo con la notacion de clase: P -> R (solicita) -> P (asignado) -> ...
+        ciclo = f"{a} -> {self.espera[a]} -> {b} -> {self.espera[b]} -> {a}"
+        print(color(f"\n   !!! DEADLOCK DETECTADO. Ciclo de espera: {ciclo}", ROJO))
+        print("   Se cumplen las 4 condiciones de Coffman:")
         print("     1. Exclusion mutua: cada recurso solo lo usa un proceso a la vez")
-        print("     2. Retencion y espera: cada proceso tiene un recurso y pide otro")
+        print("     2. Retencion (contencion) y espera: cada proceso tiene un recurso y pide otro")
         print("     3. No apropiacion: nadie le puede quitar el recurso a otro")
         print("     4. Espera circular: cada uno espera al otro")
         return atrapados
 
     def abortar(self, proceso):
         """Termina a la fuerza un proceso, suelta sus recursos y se los da a quien los esperaba."""
-        print(f"\n   ABORTANDO {proceso}...")
+        print(color(f"\n   ABORTANDO {proceso}...", ROJO))
         if proceso in self.espera:
             del self.espera[proceso]
 
@@ -85,19 +92,19 @@ class GestorRecursos:
                     if self.espera[otro] == recurso:
                         self.dueno[recurso] = otro
                         del self.espera[otro]
-                        print(f"   {recurso} se asigna a {otro}, que deja de esperar")
+                        print(color(f"   {recurso} se asigna a {otro}, que deja de esperar", VERDE))
                         break
 
     def mostrar_estado(self):
-        """Muestra quien tiene cada recurso y quien esta esperando."""
-        print("   Estado de recursos:")
+        """Muestra el grafo de asignacion de recursos (RAG) con flechas."""
+        print("   Grafo de asignacion de recursos:")
         for recurso in self.dueno:
             if self.dueno[recurso] is None:
                 print(f"     {recurso}: libre")
             else:
-                print(f"     {recurso}: lo tiene {self.dueno[recurso]}")
+                print(f"     {recurso} -> {self.dueno[recurso]}   (asignado)")
         for proceso in self.espera:
-            print(f"     {proceso} espera {self.espera[proceso]}")
+            print(f"     {proceso} -> {self.espera[proceso]}   (solicita)")
 
 
 # Prueba rapida del modulo: solo se ejecuta cuando este archivo se corre directamente
