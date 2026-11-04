@@ -1,20 +1,9 @@
-[2026-10-29 21:44:34] === GS-Kernel iniciado ===
-[2026-10-29 21:45:33] CREADO P1 'Word' | 40 MB | rafaga 7
-[2026-10-29 21:45:46] CREADO P2 'Chrome' | 30 MB | rafaga 4
-[2026-10-29 21:46:04] CREADO P3 'Spotify' | 20 MB | rafaga 3
-[2026-10-29 21:47:35] RECHAZADO 'Photoshop' por Out of Memory (pide 35 MB, libres 10 MB)
-[2026-10-29 21:48:32] ROUND ROBIN ejecutado con 3 procesos | Espera RR 7.33 vs FCFS 6.00 | Respuesta RR 3.00 vs FCFS 6.00
-[2026-10-29 21:50:34] SEMAFORO: 3 procesos, saldo 100, deposito 50 | sin semaforo = 150, con semaforo = 250
-[2026-10-29 21:52:57] DEADLOCK detectado entre PA y PB
-[2026-10-29 21:53:55] RECUPERACION: se aborto PA, deadlock resuelto
-[2026-10-31 13:15:11] === GS-Kernel iniciado ===
-[2026-11-02 11:34:20] === GS-Kernel iniciado ===
-[2026-11-02 11:34:31] === PRUEBA DE ESTRES iniciada ===
-[2026-11-02 11:34:31] CREADO P1 'Word' | 40 MB | rafaga 7
-[2026-11-02 11:34:31] CREADO P2 'Chrome' | 30 MB | rafaga 4
-[2026-11-02 11:34:31] CREADO P3 'Spotify' | 20 MB | rafaga 3
-[2026-11-02 11:34:31] RECHAZADO 'Photoshop' por Out of Memory (pide 35 MB, libres 10 MB)
-[2026-11-02 11:34:31] === PRUEBA DE ESTRES finalizada: 5/5 pruebas aprobadas ===
-[2026-11-02 17:15:49] === GS-Kernel iniciado ===
-[2026-11-02 17:16:22] CREADO P1 'Word' | 40 MB | rafaga 7
-[2026-11-02 17:18:53] === GS-Kernel finalizado ===
+[2026-11-03 19:49:09] === GS-Kernel iniciado ===
+[2026-11-03 19:50:11] CREADO P1 'Word' | 40 MB | rafaga 7
+[2026-11-03 19:50:21] CREADO P2 'Chrome' | 30 MB | rafaga 4
+[2026-11-03 19:50:33] CREADO P3 'Spotify' | 20 MB | rafaga 3
+[2026-11-03 19:51:39] RECHAZADO 'Photoshop' por Out of Memory (pide 35 MB, libres 10 MB)
+[2026-11-03 19:52:05] ROUND ROBIN con 3 procesos | Espera RR 7.33 vs FCFS 6.00 | Respuesta RR 3.00 vs FCFS 6.00 | Rendimiento 0.21
+[2026-11-03 19:53:55] SEMAFORO: 3 procesos, saldo 100, deposito 50 | sin semaforo = 150, con semaforo = 250
+[2026-11-03 19:54:52] DEADLOCK detectado entre PA y PB
+[2026-11-03 19:55:40] RECUPERACION: se aborto PB, deadlock resuelto

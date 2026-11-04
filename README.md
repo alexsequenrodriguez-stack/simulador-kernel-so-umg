@@ -65,3 +65,8 @@ los colores.
 - Deadlock por deteccion y recuperacion: no requiere conocer de antemano cuantos
   recursos pedira cada proceso; cuando se detecta el ciclo se termina un proceso
   para liberar sus recursos.
+
+
+## Video de demostracion
+
+https://youtu.be/0xZiKvdYpgA
